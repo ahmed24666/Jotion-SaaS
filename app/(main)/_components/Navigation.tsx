@@ -5,11 +5,14 @@ import { ChevronsLeft, MenuIcon } from "lucide-react";
 import { usePathname } from "next/navigation";
 import { ElementRef, useEffect, useRef, useState } from "react";
 import UserItem from "./UserItem";
+import { useQuery } from "convex/react";
+import { api } from "@/convex/_generated/api";
 
 const Navigation = () => {
   const [isMobile, setIsMobile] = useState(
     window.matchMedia("(max-width: 768px)").matches
   );
+  const documents = useQuery(api.documents.get);
   const pathname = usePathname();
   const isResizingRef = useRef(false);
   const [isResetting, setIsResetting] = useState(false);
@@ -131,6 +134,11 @@ const Navigation = () => {
 
         <div className="">
           <UserItem/>
+        </div>
+        <div className="">
+          {documents?.map((document) => (
+            <p key={document._id}>{document.title}</p>
+          ))}
         </div>
         <div
           onMouseDown={handleMouseDown}
