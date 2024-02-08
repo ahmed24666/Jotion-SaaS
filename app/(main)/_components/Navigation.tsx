@@ -1,18 +1,26 @@
 "use client";
 
 import { cn } from "@/lib/utils";
-import { ChevronsLeft, MenuIcon } from "lucide-react";
+import {
+  ChevronsLeft,
+  MenuIcon,
+  PlusCircle,
+  Search,
+  Settings,
+} from "lucide-react";
 import { usePathname } from "next/navigation";
 import { ElementRef, useEffect, useRef, useState } from "react";
 import UserItem from "./UserItem";
-import { useQuery } from "convex/react";
+import { useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
+import Item from "./Item";
+import { toast } from "sonner";
 
 const Navigation = () => {
   const [isMobile, setIsMobile] = useState(
     window.matchMedia("(max-width: 768px)").matches
   );
-  const documents = useQuery(api.documents.get);
+  const create = useMutation(api.documents.create);
   const pathname = usePathname();
   const isResizingRef = useRef(false);
   const [isResetting, setIsResetting] = useState(false);
@@ -22,19 +30,17 @@ const Navigation = () => {
 
   useEffect(() => {
     if (isMobile) {
-      collapse()
-    }else{
-      resetWidth()
+      collapse();
+    } else {
+      resetWidth();
     }
-  }, [isMobile])
+  }, [isMobile]);
 
   useEffect(() => {
     if (isMobile) {
-      collapse()
+      collapse();
     }
-  }, [isMobile , pathname])
-  
-  
+  }, [isMobile, pathname]);
 
   const handleMouseDown = (
     event: React.MouseEvent<HTMLDivElement, MouseEvent>
@@ -57,7 +63,10 @@ const Navigation = () => {
     if (sidebarRef.current && navbarRef.current) {
       sidebarRef.current.style.width = `${newWidth}px`;
       navbarRef.current.style.setProperty("left", `${newWidth}px`);
-      navbarRef.current.style.setProperty("width", `calc(100% - ${newWidth}px)`);
+      navbarRef.current.style.setProperty(
+        "width",
+        `calc(100% - ${newWidth}px)`
+      );
     }
   };
 
@@ -77,26 +86,23 @@ const Navigation = () => {
         "width",
         isMobile ? "0" : "calc(100% - 240px)"
       );
-      navbarRef.current.style.setProperty(
-        "left",
-        isMobile ? "100%" : "240px"
-      );
+      navbarRef.current.style.setProperty("left", isMobile ? "100%" : "240px");
       setTimeout(() => setIsResetting(false), 300);
     }
   };
 
-  const collapse=()=>{
+  const collapse = () => {
     if (sidebarRef.current && navbarRef.current) {
-      setIsCollapsed(true)
-      setIsResetting(true)
-      sidebarRef.current.style.width="0"
-      navbarRef.current.style.setProperty("width", "100%")
-      navbarRef.current.style.setProperty("left", "0")
+      setIsCollapsed(true);
+      setIsResetting(true);
+      sidebarRef.current.style.width = "0";
+      navbarRef.current.style.setProperty("width", "100%");
+      navbarRef.current.style.setProperty("left", "0");
       setTimeout(() => {
-        setIsResetting(false)
+        setIsResetting(false);
       }, 300);
     }
-  }
+  };
 
   useEffect(() => {
     const handleResize = () => {
@@ -110,6 +116,15 @@ const Navigation = () => {
       window.removeEventListener("resize", handleResize);
     };
   }, []);
+
+  const handleCreate = () => {
+    const promise = create({ title: "Untitled" });
+    toast.promise(promise, {
+      loading: "Creating a new note...",
+      success: "A new note created!",
+      error: "Failed to create a new note",
+    });
+  };
 
   return (
     <>
@@ -133,12 +148,13 @@ const Navigation = () => {
         </div>
 
         <div className="">
-          <UserItem/>
+          <UserItem />
+          <Item label="Search" icon={Search} isSearch onClick={() => {}} />
+          <Item label="Settings" icon={Settings} onClick={() => {}} />
+          <Item onClick={handleCreate} label="New page" icon={PlusCircle} />
         </div>
-        <div className="">
-          {documents?.map((document) => (
-            <p key={document._id}>{document.title}</p>
-          ))}
+        <div className="mt-4">
+          
         </div>
         <div
           onMouseDown={handleMouseDown}
@@ -154,14 +170,18 @@ const Navigation = () => {
           isMobile && "left-0 w-full"
         )}
       >
-        
-          <nav className="bg-transparent px-3 py-2 w-full">
-            {isCollapsed && <MenuIcon onClick={resetWidth} role="button" className="h-6 w-6 text-muted-foreground" />}
-          </nav>
+        <nav className="bg-transparent px-3 py-2 w-full">
+          {isCollapsed && (
+            <MenuIcon
+              onClick={resetWidth}
+              role="button"
+              className="h-6 w-6 text-muted-foreground"
+            />
+          )}
+        </nav>
       </div>
     </>
   );
 };
 
 export default Navigation;
-
